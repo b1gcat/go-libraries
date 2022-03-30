@@ -95,6 +95,7 @@ func NewAws(opt map[string]interface{}, optFn ...OptionsFunc) (Iot, error) {
 	}
 
 	a.thing = iot.NewFromConfig(cfg)
+
 	a.region = cfg.Region
 	a.endpoint = opt["endpoint"].(string)
 	a.ca = amazonCa

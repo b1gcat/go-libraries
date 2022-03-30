@@ -9,7 +9,7 @@ import (
 func Test_aws(t *testing.T) {
 	a, err := NewAws(map[string]interface{}{
 		"profile":  "aws",
-		"endpoint": "xxxx",
+		"endpoint": "xxx",
 	}, WithContext(context.Background()))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -17,7 +17,7 @@ func Test_aws(t *testing.T) {
 	}
 
 	fmt.Println(a.Publish(map[string]interface{}{
-		"topic":   "A0000031f8f93f81",
+		"topic":   "__master__b1gcat_local",
 		"message": `{"message":"hello"}`,
 		"retain":  false,
 	}))
