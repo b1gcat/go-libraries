@@ -10,9 +10,6 @@ type Iot interface {
 	CreateThing(map[string]interface{}) (map[string]interface{}, error)
 	Subscribe(sub map[string]interface{}) error
 	Publish(pub map[string]interface{}) error
-	CreateThingAK(ak map[string]interface{}) (map[string]interface{}, error)
-	CreateGroup(g map[string]interface{}) error
-	CreateThingType(g map[string]interface{}) error
 	Config() map[string]interface{}
 	Close()
 }

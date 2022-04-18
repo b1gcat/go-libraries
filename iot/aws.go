@@ -1,7 +1,5 @@
 /*
 托管策略
-AmazonSNSFullAccess
-托管策略
 AWSIoTFullAccess
 */
 
@@ -125,7 +123,7 @@ func (a *Aws) Subscribe(s map[string]interface{}) error {
 //@topic
 func (a *Aws) Publish(s map[string]interface{}) error {
 	tk := a.device.Publish(s["topic"].(string), 0, s["retain"].(bool), s["message"].(string))
-	a.logger.Debug("Publish:", s["message"].(string), tk)
+	a.logger.Debug("Publish:", s["tag"].(string), ":", s["message"].(string), tk)
 	return nil
 }
 
@@ -134,9 +132,9 @@ func (a *Aws) Publish(s map[string]interface{}) error {
 //@tName
 //@tType
 //@tGroup
-//@cert_arn
 //Output:
 //@arn
+//xxx
 func (a *Aws) CreateThing(t map[string]interface{}) (map[string]interface{}, error) {
 	outThg, err := a.thing.CreateThing(a.ctx, &iot.CreateThingInput{
 		ThingName:     aws.String(t["tName"].(string)),
@@ -155,10 +153,18 @@ func (a *Aws) CreateThing(t map[string]interface{}) (map[string]interface{}, err
 		return nil, err
 	}
 
+	//创建AK
+	nAk, err := a.createThingAK(map[string]interface{}{
+		"tName": t["tName"].(string),
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	//绑定证书
 	if _, err = a.thing.AttachThingPrincipal(a.ctx, &iot.AttachThingPrincipalInput{
 		ThingName: aws.String(t["tName"].(string)),
-		Principal: aws.String(t["cert_arn"].(string)),
+		Principal: aws.String(nAk["cert_arn"].(string)),
 	}); err != nil {
 		return nil, err
 	}
@@ -166,13 +172,16 @@ func (a *Aws) CreateThing(t map[string]interface{}) (map[string]interface{}, err
 	//绑定策略
 	if _, err = a.thing.AttachPolicy(a.ctx, &iot.AttachPolicyInput{
 		PolicyName: aws.String(t["policy"].(string)),
-		Target:     aws.String(t["cert_arn"].(string)),
+		Target:     aws.String(nAk["cert_arn"].(string)),
 	}); err != nil {
 		return nil, err
 	}
 
 	ret := map[string]interface{}{
-		"arn": *outThg.ThingArn,
+		"arn":     *outThg.ThingArn,
+		"pkey":    nAk["pKey"].(string), //secret
+		"cert":    nAk["cert"].(string), //accessKeyId
+		"cert_id": nAk["cert_id"].(string),
 	}
 
 	a.logger.Debug(fmt.Sprintf("AddThing:%v", ret))
@@ -187,7 +196,7 @@ func (a *Aws) CreateThing(t map[string]interface{}) (map[string]interface{}, err
 //@certId
 //@cert
 //@cert_arn
-func (a *Aws) CreateThingAK(ak map[string]interface{}) (map[string]interface{}, error) {
+func (a *Aws) createThingAK(ak map[string]interface{}) (map[string]interface{}, error) {
 	//创建csr
 	template := x509.CertificateRequest{
 		Subject: pkix.Name{
@@ -222,20 +231,6 @@ func (a *Aws) CreateThingAK(ak map[string]interface{}) (map[string]interface{}, 
 	ak["cert"] = *kOut.CertificatePem
 	ak["cert_arn"] = *kOut.CertificateArn
 	return ak, nil
-}
-
-func (a *Aws) CreateGroup(g map[string]interface{}) error {
-	_, err := a.thing.CreateThingGroup(a.ctx, &iot.CreateThingGroupInput{
-		ThingGroupName: aws.String(g["name"].(string)),
-	})
-	return err
-}
-
-func (a *Aws) CreateThingType(t map[string]interface{}) error {
-	_, err := a.thing.CreateThingType(a.ctx, &iot.CreateThingTypeInput{
-		ThingTypeName: aws.String(t["name"].(string)),
-	})
-	return err
 }
 
 //RemoveThing says ...
@@ -290,24 +285,18 @@ func (a *Aws) createMaster() error {
 	if shouldCreate {
 		a.logger.Warn("主设备[", a.as.MasterDevice, "]不存在 : 创建新主设备")
 		//无设备,则创建
-		nAk, err := a.CreateThingAK(map[string]interface{}{
-			"tName": a.as.MasterDevice,
+		thing, err := a.CreateThing(map[string]interface{}{
+			"tName":  a.as.MasterDevice,
+			"tType":  defaultMasterType,
+			"tGroup": defaultMasterGroup,
+			"policy": defaultMasterPolicy,
 		})
 		if err != nil {
 			return err
 		}
-		if _, err = a.CreateThing(map[string]interface{}{
-			"tName":    a.as.MasterDevice,
-			"tType":    defaultMasterType,
-			"tGroup":   defaultMasterGroup,
-			"cert_arn": nAk["cert_arn"].(string),
-			"policy":   defaultMasterPolicy,
-		}); err != nil {
-			return err
-		}
-		a.as.CertId = nAk["cert_id"].(string)
-		a.as.PrivateKey = nAk["pKey"].(string)
-		a.as.Cert = nAk["cert"].(string)
+		a.as.CertId = thing["cert_id"].(string)
+		a.as.PrivateKey = thing["pKey"].(string)
+		a.as.Cert = thing["cert"].(string)
 		if err = a.as.save(); err != nil {
 			return err
 		}
