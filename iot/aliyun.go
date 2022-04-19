@@ -32,7 +32,7 @@ func (a *Ali) Config() map[string]interface{} {
 		"region": a.region,
 		//xxx.iot-as-mqtt.yyy.aliyuncs.com
 		"host": fmt.Sprintf("%s.iot-as-mqtt.%s.aliyuncs.com", a.ProductKey, a.region),
-		"ca":   "",
+		"ca":   []string{"-"},
 	}
 }
 
@@ -93,7 +93,7 @@ func (a *Ali) Publish(s map[string]interface{}) error {
 		Qos:            tea.Int32(0),
 		MessageContent: tea.String(base64.StdEncoding.EncodeToString([]byte(s["message"].(string)))),
 	}
-
+	a.logger.Debug("Publish:", *pubRequest.TopicFullName, ":", s["message"].(string))
 	// 复制代码运行请自行打印 API 的返回值
 	if _, err := a.thing.Pub(pubRequest); err != nil {
 		return err
@@ -120,8 +120,8 @@ func (a *Ali) CreateThing(t map[string]interface{}) (map[string]interface{}, err
 		Tag: []*iot20180120.QueryDeviceGroupByTagsRequestTag{tag},
 	}
 	grpInfo, err := a.thing.QueryDeviceGroupByTags(queryDeviceGroupByTagsRequest)
-	if err != nil {
-		return nil, err
+	if err != nil || grpInfo.Body.Data == nil || len(grpInfo.Body.Data.DeviceGroup) == 0 {
+		return nil, fmt.Errorf("从IOT平台上未找到设备组: %v:%v", t["tGroup"].(string), err)
 	}
 	//删除旧设备
 	deleteDeviceRequest := &iot20180120.DeleteDeviceRequest{
@@ -133,12 +133,12 @@ func (a *Ali) CreateThing(t map[string]interface{}) (map[string]interface{}, err
 	registerDeviceRequest := &iot20180120.RegisterDeviceRequest{
 		DeviceName: tea.String(t["tName"].(string)),
 		ProductKey: tea.String(a.ProductKey),
-		Nickname:   tea.String(t["tType"].(string)),
+		Nickname:   tea.String(t["tGroup"].(string)),
 	}
 
 	devInfo, err := a.thing.RegisterDevice(registerDeviceRequest)
-	if err != nil {
-		return nil, err
+	if err != nil || *devInfo.Body.Code != "" {
+		return nil, fmt.Errorf("向IOT注册设备失败: %v:%v", *devInfo.Body.ErrorMessage, err)
 	}
 
 	a.logger.Debug(fmt.Sprintf("CreateThing:%s", *registerDeviceRequest.DeviceName))
@@ -153,16 +153,16 @@ func (a *Ali) CreateThing(t map[string]interface{}) (map[string]interface{}, err
 			},
 		},
 	}
-	_, err = a.thing.BatchAddDeviceGroupRelations(batchAddDeviceGroupRelationsRequest)
-	if err != nil {
-		return nil, err
+	r, err := a.thing.BatchAddDeviceGroupRelations(batchAddDeviceGroupRelationsRequest)
+	if err != nil || *r.Body.Code != "" {
+		return nil, fmt.Errorf("IOT平台绑定设备组失败: %v:%v", *devInfo.Body.ErrorMessage, err)
 	}
 
 	ret := map[string]interface{}{
-		"arn":     devInfo.Body.Data.IotId,
-		"pkey":    devInfo.Body.Data.DeviceSecret,
+		"arn":     *devInfo.Body.Data.IotId,
+		"pKey":    *devInfo.Body.Data.DeviceSecret,
 		"cert":    a.ProductKey, //accessKeyId
-		"cert_id": devInfo.Body.Data.IotId,
+		"cert_id": *devInfo.Body.Data.IotId,
 	}
 
 	a.logger.Debug(fmt.Sprintf("AddThing:%v", ret))
