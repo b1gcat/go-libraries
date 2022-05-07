@@ -19,7 +19,7 @@ func RecoverFiles(newFile, orgFile string) error {
 	}
 	bakFile := orgFile + ".bak"
 	//先备份
-	if err := CopyFiles(newFile, bakFile); err != nil {
+	if err := CopyFiles(orgFile, bakFile); err != nil {
 		return fmt.Errorf("备份时发生异常, 停止更新配置:" + err.Error())
 	}
 	//删掉被更新的文件
@@ -27,11 +27,13 @@ func RecoverFiles(newFile, orgFile string) error {
 	//还原新文件
 	if err := CopyFiles(newFile, orgFile); err != nil {
 		//还原失败，则恢复文件
+		_ = os.Remove(orgFile)
 		if err = CopyFiles(bakFile, orgFile); err != nil {
 			return fmt.Errorf("恢复配置失败:" + err.Error())
 		}
 		return fmt.Errorf("复制新文件时失败:" + err.Error())
 	}
+	_ = os.Remove(newFile)
 	return nil
 }
 
