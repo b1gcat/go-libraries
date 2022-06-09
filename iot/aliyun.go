@@ -4,12 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
-	iot20180120 "github.com/alibabacloud-go/iot-20180120/v3/client"
-	"github.com/alibabacloud-go/tea/tea"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
+	iot20180120 "github.com/alibabacloud-go/iot-20180120/v3/client"
+	"github.com/alibabacloud-go/tea/tea"
 )
 
 type aliConf struct {

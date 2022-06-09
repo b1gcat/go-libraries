@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 func RunCmd(ctx context.Context, cmd ...string) (int, []byte, []byte, error) {
@@ -18,7 +19,7 @@ func RunCmd(ctx context.Context, cmd ...string) (int, []byte, []byte, error) {
 	c.Stdout = o
 	if err := c.Run(); err != nil {
 		return -1, o.Bytes(), e.Bytes(), fmt.Errorf("err=%v:stderr=%v:stdout=%v",
-			err.Error())
+			err, o.Bytes(), e.Bytes())
 	}
 	return c.Process.Pid, o.Bytes(), e.Bytes(), nil
 }
