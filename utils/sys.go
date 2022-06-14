@@ -19,7 +19,7 @@ func RunCmd(ctx context.Context, cmd ...string) (int, []byte, []byte, error) {
 	c.Stdout = o
 	if err := c.Run(); err != nil {
 		return -1, o.Bytes(), e.Bytes(), fmt.Errorf("err=%v:stderr=%v:stdout=%v",
-			err, o.Bytes(), e.Bytes())
+			err, e.String(), e.String())
 	}
 	return c.Process.Pid, o.Bytes(), e.Bytes(), nil
 }
