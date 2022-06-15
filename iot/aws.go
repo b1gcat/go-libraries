@@ -14,15 +14,16 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/iot"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 var (
@@ -179,7 +180,7 @@ func (a *Aws) CreateThing(t map[string]interface{}) (map[string]interface{}, err
 
 	ret := map[string]interface{}{
 		"arn":     *outThg.ThingArn,
-		"pkey":    nAk["pKey"].(string), //secret
+		"pKey":    nAk["pKey"].(string), //secret
 		"cert":    nAk["cert"].(string), //accessKeyId
 		"cert_id": nAk["cert_id"].(string),
 	}
