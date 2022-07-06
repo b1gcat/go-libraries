@@ -4,8 +4,9 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Database interface {
@@ -49,8 +50,9 @@ func MakeQueryCondition(q map[string]string) (condition string) {
 	case "like":
 		condition = fmt.Sprintf(`%s like '%%%s%%'`, qName, qValue)
 	default:
-		condition = fmt.Sprintf(`%s%s'%s'`, qName, qType, qValue)
+		condition = fmt.Sprintf(`%s %s '%s'`, qName, qType, qValue)
 	}
+
 	if qOrder != "" {
 		condition += " order by " + qOrder
 	}
