@@ -11,6 +11,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
 	iot20180120 "github.com/alibabacloud-go/iot-20180120/v3/client"
 	"github.com/alibabacloud-go/tea/tea"
+	"github.com/b1gcat/go-libraries/utils"
 )
 
 type aliConf struct {
@@ -88,11 +89,15 @@ func (a *Ali) Subscribe(s map[string]interface{}) error {
 //@message
 //@topic
 func (a *Ali) Publish(s map[string]interface{}) error {
+	message := s["message"].(string)
+	if key, ok := s["key"]; ok {
+		message = utils.Encode(message, []byte(key.(string)))
+	}
 	pubRequest := &iot20180120.PubRequest{
 		TopicFullName:  tea.String(fmt.Sprintf("/%s/%s/user/command", a.ProductKey, s["topic"].(string))),
 		ProductKey:     tea.String(a.ProductKey),
 		Qos:            tea.Int32(0),
-		MessageContent: tea.String(base64.StdEncoding.EncodeToString([]byte(s["message"].(string)))),
+		MessageContent: tea.String(base64.StdEncoding.EncodeToString([]byte(message))),
 	}
 	a.logger.Debug("Publish:", *pubRequest.TopicFullName, ":", s["message"].(string))
 	// 复制代码运行请自行打印 API 的返回值
