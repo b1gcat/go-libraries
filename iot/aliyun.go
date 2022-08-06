@@ -92,10 +92,6 @@ func (a *Ali) Publish(s map[string]interface{}) error {
 	if key, ok := s["key"]; ok {
 		message = utils.Encode(message, []byte(key.(string)))
 	}
-	messageId := message
-	if len(message) > 16 {
-		messageId = message[:16]
-	}
 
 	pubRequest := &iot20180120.PubRequest{
 		TopicFullName:  tea.String(fmt.Sprintf("/%s/%s/user/command", a.ProductKey, s["topic"].(string))),
@@ -103,7 +99,7 @@ func (a *Ali) Publish(s map[string]interface{}) error {
 		Qos:            tea.Int32(0),
 		MessageContent: tea.String(message),
 	}
-	a.logger.Debug("Publish:", *pubRequest.TopicFullName, "::", messageId, s["message"].(string))
+	a.logger.Debug("Publish:", *pubRequest.TopicFullName, "::", s["message"].(string))
 	// 复制代码运行请自行打印 API 的返回值
 	if _, err := a.thing.Pub(pubRequest); err != nil {
 		return err
