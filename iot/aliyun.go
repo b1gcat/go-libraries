@@ -90,7 +90,21 @@ func (a *Ali) Subscribe(s map[string]interface{}) error {
 func (a *Ali) Publish(s map[string]interface{}) error {
 	message := s["message"].(string)
 	if key, ok := s["key"]; ok {
-		message = utils.Encode(message, []byte(key.(string)))
+		type iotEnc struct {
+			Command string `json:"command"`
+			Raw     string `json:"raw"`
+		}
+		e := iotEnc{
+			Raw: utils.Encode(message, []byte(key.(string))),
+		}
+		if _, ok := s["command"]; ok {
+			e.Command = s["command"].(string)
+		}
+		raw, err := json.Marshal(&e)
+		if err != nil {
+			return err
+		}
+		message = string(raw)
 	}
 
 	pubRequest := &iot20180120.PubRequest{
