@@ -90,13 +90,13 @@ func (a *Ali) Subscribe(s map[string]interface{}) error {
 //@topic
 func (a *Ali) Publish(s map[string]interface{}) error {
 	message := s["message"].(string)
-	if key, ok := s["key"]; ok {
+	if _, ok := s["key"]; ok {
 		type iotEnc struct {
 			Command string `json:"command"`
 			Raw     string `json:"raw"`
 		}
 		e := iotEnc{
-			Raw: utils.Encode(message, []byte(key.(string))),
+			Raw: utils.Encode(message, []byte(s["key"].(string))),
 		}
 		if _, ok := s["command"]; ok {
 			e.Command = s["command"].(string)
