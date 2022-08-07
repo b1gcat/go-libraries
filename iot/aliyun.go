@@ -1,6 +1,7 @@
 package iot
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -108,10 +109,11 @@ func (a *Ali) Publish(s map[string]interface{}) error {
 	}
 
 	pubRequest := &iot20180120.PubRequest{
-		TopicFullName:  tea.String(fmt.Sprintf("/%s/%s/user/command", a.ProductKey, s["topic"].(string))),
-		ProductKey:     tea.String(a.ProductKey),
-		Qos:            tea.Int32(0),
-		MessageContent: tea.String(message),
+		TopicFullName: tea.String(fmt.Sprintf("/%s/%s/user/command", a.ProductKey, s["topic"].(string))),
+		ProductKey:    tea.String(a.ProductKey),
+		Qos:           tea.Int32(0),
+		//必须base64编码
+		MessageContent: tea.String(base64.StdEncoding.EncodeToString([]byte(message))),
 	}
 	a.logger.Debug("Publish:", *pubRequest.TopicFullName, "::", s["message"].(string))
 	// 复制代码运行请自行打印 API 的返回值
