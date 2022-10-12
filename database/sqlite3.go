@@ -1,10 +1,11 @@
 package database
 
 import (
+	"sync"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"sync"
 )
 
 type Sqlite3 struct {

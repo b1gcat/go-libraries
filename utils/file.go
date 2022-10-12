@@ -5,22 +5,23 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 //RecoverFiles 导入配置时，生成new配置和bak配置。
 func RecoverFiles(newFile, orgFile string) error {
 	if _, err := os.Stat(newFile); err != nil {
-		return fmt.Errorf("配置更新:无更新")
+		return fmt.Errorf("配置恢复:无需恢复")
 	}
 	bakFile := orgFile + ".bak"
 	//先备份
 	if err := CopyFiles(orgFile, bakFile); err != nil {
-		return fmt.Errorf("备份时发生异常, 停止更新配置:" + err.Error())
+		return fmt.Errorf("备份时发生异常, 停止恢复配置:" + err.Error())
 	}
 	//删掉被更新的文件
 	_ = os.Remove(orgFile)
@@ -31,7 +32,7 @@ func RecoverFiles(newFile, orgFile string) error {
 		if err = CopyFiles(bakFile, orgFile); err != nil {
 			return fmt.Errorf("恢复配置失败:" + err.Error())
 		}
-		return fmt.Errorf("复制新文件时失败:" + err.Error())
+		return fmt.Errorf("复制配置时失败:" + err.Error())
 	}
 	_ = os.Remove(newFile)
 	return nil
