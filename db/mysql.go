@@ -64,8 +64,15 @@ func (db *Mysql) First(query interface{}, args interface{}, m interface{}) *gorm
 	return db.gdb.Where(query, args).First(m)
 }
 
-func (db *Mysql) Find(query interface{}, args interface{}, m interface{}) *gorm.DB {
-	return db.gdb.Where(query, args).Find(m)
+func (db *Mysql) Find(query interface{}, args interface{}, m interface{}) error {
+	tx := db.gdb.Where(query, args).Find(m)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (db *Mysql) Find2(q1 interface{}, a1 interface{}, q2 interface{}, a2 interface{}, m interface{}) *gorm.DB {
