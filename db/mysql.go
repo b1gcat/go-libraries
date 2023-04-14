@@ -75,17 +75,6 @@ func (db *Mysql) Find(query interface{}, args interface{}, m interface{}) error 
 	return nil
 }
 
-func (db *Mysql) Find2(q1 interface{}, a1 interface{}, q2 interface{}, a2 interface{}, m interface{}) error {
-	tx := db.gdb.Where(q1, a1).Where(q2, a2).Find(m)
-	if tx.Error != nil {
-		return tx.Error
-	}
-	if tx.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
-}
-
 func (db *Mysql) FindWithOrder(query, args, order, m interface{}) *gorm.DB {
 	return db.gdb.Where(query, args).Order(order).Find(m)
 }

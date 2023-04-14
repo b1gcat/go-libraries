@@ -54,7 +54,7 @@ func (db *S3) InsertBatch(items ...interface{}) error {
 }
 
 // db.Where("uuid = ?", "test").Delete(&xxx)
-func (db *S3) Remove(query interface{}, args interface{}, m interface{}) error {
+func (db *S3) Delete(query interface{}, args interface{}, m interface{}) error {
 	db.locker.Lock()
 	defer db.locker.Unlock()
 
@@ -88,20 +88,6 @@ func (db *S3) Find(query interface{}, args interface{}, m interface{}) error {
 	defer db.locker.Unlock()
 
 	tx := db.gdb.Where(query, args).Find(m)
-	if tx.Error != nil {
-		return tx.Error
-	}
-	if tx.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
-}
-
-func (db *S3) Find2(q1 interface{}, a1 interface{}, q2 interface{}, a2 interface{}, m interface{}) error {
-	db.locker.Lock()
-	defer db.locker.Unlock()
-
-	tx := db.gdb.Where(q1, a1).Where(q2, a2).Find(m)
 	if tx.Error != nil {
 		return tx.Error
 	}
