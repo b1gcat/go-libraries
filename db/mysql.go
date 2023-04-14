@@ -90,6 +90,6 @@ func (db *Mysql) FindWithOrder(query, args, order, m interface{}) *gorm.DB {
 	return db.gdb.Where(query, args).Order(order).Find(m)
 }
 
-func (db *Mysql) FindRaw(sql string, limit int, m interface{}, values ...interface{}) *gorm.DB {
-	return db.gdb.Raw(sql, values).Find(m).Limit(limit)
+func (db *Mysql) FindRaw(sql string, m interface{}, values ...interface{}) *gorm.DB {
+	return db.gdb.Raw(sql, values).Find(m)
 }

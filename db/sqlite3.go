@@ -118,9 +118,9 @@ func (db *S3) FindWithOrder(query, args, order, m interface{}) *gorm.DB {
 	return db.gdb.Where(query, args).Order(order).Find(m)
 }
 
-func (db *S3) FindRaw(sql string, limit int, m interface{}, values ...interface{}) *gorm.DB {
+func (db *S3) FindRaw(sql string, m interface{}, values ...interface{}) *gorm.DB {
 	db.locker.Lock()
 	defer db.locker.Unlock()
 
-	return db.gdb.Raw(sql, values).Find(m).Limit(limit)
+	return db.gdb.Raw(sql, values).Find(m)
 }
