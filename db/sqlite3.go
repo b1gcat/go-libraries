@@ -68,12 +68,10 @@ func (db *S3) Update(query interface{}, args interface{}, m interface{}) error {
 	return db.gdb.Model(m).Where(query, args).Updates(m).Error
 }
 
-func (db *S3) Update2(q1 interface{}, args1 interface{},
-	q2 interface{}, args2 interface{}, m interface{}) error {
+func (db *S3) UpdateRaw(sql string, value interface{}, m interface{}) error {
 	db.locker.Lock()
 	defer db.locker.Unlock()
-
-	return db.gdb.Model(m).Where(q1, args1).Where(q2, args2).Updates(m).Error
+	return db.gdb.Model(m).Raw(sql, value).Where("1=?", 1).Updates(m).Error
 }
 
 func (db *S3) First(query interface{}, args interface{}, m interface{}) *gorm.DB {

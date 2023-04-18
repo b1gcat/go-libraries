@@ -55,9 +55,8 @@ func (db *Mysql) Update(query interface{}, args interface{}, m interface{}) erro
 	return db.gdb.Model(m).Where(query, args).Updates(m).Error
 }
 
-func (db *Mysql) Update2(q1 interface{}, args1 interface{},
-	q2 interface{}, args2 interface{}, m interface{}) error {
-	return db.gdb.Model(m).Where(q1, args1).Where(q2, args2).Updates(m).Error
+func (db *Mysql) UpdateRaw(sql string, value interface{}, m interface{}) error {
+	return db.gdb.Model(m).Raw(sql, value).Where("1=?", 1).Updates(m).Error
 }
 
 func (db *Mysql) First(query interface{}, args interface{}, m interface{}) *gorm.DB {
