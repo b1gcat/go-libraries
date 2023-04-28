@@ -59,8 +59,15 @@ func (db *Mysql) UpdateRaw(sql string, value interface{}, m interface{}) error {
 	return db.gdb.Model(m).Raw(sql, value).Where("1=?", 1).Updates(m).Error
 }
 
-func (db *Mysql) First(query interface{}, args interface{}, m interface{}) *gorm.DB {
-	return db.gdb.Where(query, args).First(m)
+func (db *Mysql) First(query interface{}, args interface{}, m interface{}) error {
+	tx := db.gdb.Where(query, args).First(m)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (db *Mysql) Find(query interface{}, args interface{}, m interface{}) error {
@@ -74,10 +81,11 @@ func (db *Mysql) Find(query interface{}, args interface{}, m interface{}) error 
 	return nil
 }
 
-func (db *Mysql) FindWithOrder(query, args, order, m interface{}) *gorm.DB {
-	return db.gdb.Where(query, args).Order(order).Find(m)
-}
+func (db *Mysql) FindRaw(sql string, m interface{}, values ...interface{}) error {
+	tx := db.gdb.Raw(sql, values).Find(m)
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
 
-func (db *Mysql) FindRaw(sql string, m interface{}, values ...interface{}) *gorm.DB {
-	return db.gdb.Raw(sql, values).Find(m)
+	return nil
 }

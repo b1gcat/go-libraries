@@ -74,11 +74,18 @@ func (db *S3) UpdateRaw(sql string, value interface{}, m interface{}) error {
 	return db.gdb.Model(m).Raw(sql, value).Where("1=?", 1).Updates(m).Error
 }
 
-func (db *S3) First(query interface{}, args interface{}, m interface{}) *gorm.DB {
+func (db *S3) First(query interface{}, args interface{}, m interface{}) error {
 	db.locker.Lock()
 	defer db.locker.Unlock()
 
-	return db.gdb.Where(query, args).First(m)
+	tx := db.gdb.Where(query, args).First(m)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (db *S3) Find(query interface{}, args interface{}, m interface{}) error {
@@ -95,16 +102,13 @@ func (db *S3) Find(query interface{}, args interface{}, m interface{}) error {
 	return nil
 }
 
-func (db *S3) FindWithOrder(query, args, order, m interface{}) *gorm.DB {
+func (db *S3) FindRaw(sql string, m interface{}, values ...interface{}) error {
 	db.locker.Lock()
 	defer db.locker.Unlock()
 
-	return db.gdb.Where(query, args).Order(order).Find(m)
-}
-
-func (db *S3) FindRaw(sql string, m interface{}, values ...interface{}) *gorm.DB {
-	db.locker.Lock()
-	defer db.locker.Unlock()
-
-	return db.gdb.Raw(sql, values).Find(m)
+	tx := db.gdb.Raw(sql, values).Find(m)
+	if tx.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
