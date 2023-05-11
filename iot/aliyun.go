@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
-	iot20180120 "github.com/alibabacloud-go/iot-20180120/v3/client"
+	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	iot20180120 "github.com/alibabacloud-go/iot-20180120/v4/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/b1gcat/go-libraries/utils"
 )
@@ -75,19 +75,19 @@ func (a *Ali) Close() {
 	a.cancel()
 }
 
-//Subscribe say...
-//Input：
-//@endpoint
-//@protocol
-//@topic_arn
+// Subscribe say...
+// Input：
+// @endpoint
+// @protocol
+// @topic_arn
 func (a *Ali) Subscribe(s map[string]interface{}) error {
 	return fmt.Errorf("no support")
 }
 
-//Publish say...
-//Input：
-//@message
-//@topic
+// Publish say...
+// Input：
+// @message
+// @topic
 func (a *Ali) Publish(s map[string]interface{}) error {
 	message := s["message"].(string)
 	if _, ok := s["key"]; ok {
@@ -123,15 +123,15 @@ func (a *Ali) Publish(s map[string]interface{}) error {
 	return nil
 }
 
-//CreateThing 控制台生成物料以及身份认证信息
-//Input：
-//@tName
-//@tType
-//@tGroup
-//@cert_arn
-//Output:
-//@arn
-//@ak...
+// CreateThing 控制台生成物料以及身份认证信息
+// Input：
+// @tName
+// @tType
+// @tGroup
+// @cert_arn
+// Output:
+// @arn
+// @ak...
 func (a *Ali) CreateThing(t map[string]interface{}) (map[string]interface{}, error) {
 	//查询组信息
 	tag := &iot20180120.QueryDeviceGroupByTagsRequestTag{
