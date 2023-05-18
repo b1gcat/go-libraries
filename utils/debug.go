@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"runtime/pprof"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
 	//go tool pprof  https+insecure://localhost:8888/debug/pprof/profile?seconds=60
 	//_ "net/http/pprof"
 )
@@ -28,7 +29,7 @@ func waitExit(c chan os.Signal) {
 	}
 }
 
-//Pprof go tool pprof vpnServer_xxx cpu.prof
+// Pprof go tool pprof vpnServer_xxx cpu.prof
 func Pprof(name string) {
 	logrus.Info("开启调试模式:", "go tool pprof "+name)
 	//CPU 性能分析

@@ -2,8 +2,9 @@ package iot
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"sync"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Iot interface {
