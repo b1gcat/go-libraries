@@ -24,9 +24,9 @@ func RunCmd(ctx context.Context, cmd ...string) (int, []byte, []byte, error) {
 	return c.Process.Pid, o.Bytes(), e.Bytes(), nil
 }
 
-//StartApp
-//@load/cb 启动启动程序后load秒执行脚本或函数（例如加载配置等）
-//#cmd[0] 为App的路径
+// StartApp
+// @load/cb 启动启动程序后load秒执行脚本或函数（例如加载配置等）
+// #cmd[0] 为App的路径
 func StartApp(ctx context.Context, l *logrus.Logger, tag string, load int, cb func(context.Context), cmd ...string) {
 	for {
 		l.Info(fmt.Sprintf("%s:启动", tag))
@@ -45,8 +45,11 @@ func StartApp(ctx context.Context, l *logrus.Logger, tag string, load int, cb fu
 			}()
 		}
 		//杀死fixme: pid @ $1
-		_, _, _, _ = RunCmd(ctx,
-			fmt.Sprintf("kill -9 `ps aux|grep %s|grep -v grep|awk '{print $1}'`", cmd[0]))
+		_, _, _, err := RunCmd(ctx,
+			fmt.Sprintf("kill -9 `ps aux|grep %s|grep -v grep|awk '{print $1}'`", tag))
+		if err != nil {
+			l.Debug(fmt.Sprintf("Stop: %s: %s failed", tag, err.Error()))
+		}
 		//前台运行App
 		pid, _, _, err := RunCmd(ctx, cmd...)
 		if err != nil {
