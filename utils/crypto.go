@@ -4,18 +4,24 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base32"
+	"encoding/base64"
+	"encoding/pem"
+	"errors"
 	"fmt"
 )
 
-//PKCS7Padding say ...
+// PKCS7Padding say ...
 func PKCS7Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padText := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padText...)
 }
 
-//PKCS7UnPadding 使用PKCS7进行填充 复原
+// PKCS7UnPadding 使用PKCS7进行填充 复原
 func PKCS7UnPadding(origData []byte) []byte {
 	length := len(origData)
 	if length == 0 {
@@ -46,7 +52,7 @@ func Decode(eid string, key []byte) ([]byte, error) {
 	return id, nil
 }
 
-//Encode base32( aes(hid) )
+// Encode base32( aes(hid) )
 func Encode(id string, key []byte) string {
 	c, _ := aes.NewCipher(key)
 	pHid := PKCS7Padding([]byte(id), c.BlockSize())
@@ -56,4 +62,67 @@ func Encode(id string, key []byte) string {
 	mode.CryptBlocks(eid, pHid)
 	//编码eid
 	return base32.StdEncoding.EncodeToString(eid)
+}
+
+func PublicEncrypt(publicKey []byte, data []byte) ([]byte, error) {
+	block, _ := pem.Decode(publicKey)
+	if block == nil {
+		return nil, errors.New("public key error")
+	}
+	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	pub := pubInterface.(*rsa.PublicKey)
+
+	partLen := pub.N.BitLen()/8 - 11
+	chunks := split(data, partLen)
+	buffer := bytes.NewBufferString("")
+	for _, chunk := range chunks {
+		bytes, err := rsa.EncryptPKCS1v15(rand.Reader, pub, chunk)
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(bytes)
+	}
+	return buffer.Bytes(), nil
+}
+
+// 私钥解密
+func PrivateDecrypt(privateKey []byte, encrypted string) ([]byte, error) {
+	block, _ := pem.Decode(privateKey)
+	if block == nil {
+		return nil, errors.New("private key error!")
+	}
+	priv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	pri, _ := priv.(*rsa.PrivateKey)
+
+	partLen := pri.PublicKey.N.BitLen() / 8
+	raw, err := base64.RawURLEncoding.DecodeString(encrypted)
+	chunks := split([]byte(raw), partLen)
+	buffer := bytes.NewBufferString("")
+	for _, chunk := range chunks {
+		decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, pri, chunk)
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(decrypted)
+	}
+	return buffer.Bytes(), err
+}
+
+func split(buf []byte, lim int) [][]byte {
+	var chunk []byte
+	chunks := make([][]byte, 0, len(buf)/lim+1)
+	for len(buf) >= lim {
+		chunk, buf = buf[:lim], buf[lim:]
+		chunks = append(chunks, chunk)
+	}
+	if len(buf) > 0 {
+		chunks = append(chunks, buf[:])
+	}
+	return chunks
 }
