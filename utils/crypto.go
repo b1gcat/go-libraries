@@ -92,26 +92,38 @@ func PublicEncrypt(publicKey []byte, data []byte) ([]byte, error) {
 func PrivateDecrypt(privateKey []byte, encrypted string) ([]byte, error) {
 	block, _ := pem.Decode(privateKey)
 	if block == nil {
-		return nil, errors.New("private key error!")
+		return nil, fmt.Errorf("private key error")
 	}
-	priv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
-	pri, _ := priv.(*rsa.PrivateKey)
 
-	partLen := pri.PublicKey.N.BitLen() / 8
-	raw, err := base64.RawURLEncoding.DecodeString(encrypted)
+	partLen := priv.PublicKey.N.BitLen() / 8
+	raw, err := base64.StdEncoding.DecodeString(encrypted)
 	chunks := split([]byte(raw), partLen)
 	buffer := bytes.NewBufferString("")
 	for _, chunk := range chunks {
-		decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, pri, chunk)
+		decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, priv, chunk)
 		if err != nil {
 			return nil, err
 		}
 		buffer.Write(decrypted)
 	}
 	return buffer.Bytes(), err
+}
+
+func split(buf []byte, lim int) [][]byte {
+	var chunk []byte
+	chunks := make([][]byte, 0, len(buf)/lim+1)
+	for len(buf) >= lim {
+		chunk, buf = buf[:lim], buf[lim:]
+		chunks = append(chunks, chunk)
+	}
+	if len(buf) > 0 {
+		chunks = append(chunks, buf[:])
+	}
+	return chunks
 }
 
 func split(buf []byte, lim int) [][]byte {
