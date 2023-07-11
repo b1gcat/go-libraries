@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -13,6 +14,8 @@ import (
 
 func RunCmd(ctx context.Context, cmd ...string) (int, []byte, []byte, error) {
 	c := exec.CommandContext(ctx, "sh", "-c", strings.Join(cmd, " "))
+	c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	e := bytes.NewBuffer(nil)
 	o := bytes.NewBuffer(nil)
 	c.Stderr = e
