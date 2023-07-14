@@ -1,30 +1,25 @@
 package utils
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os/exec"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
-func RunCmd(ctx context.Context, cmd ...string) (int, []byte, []byte, error) {
+func RunCmd(ctx context.Context, cmd ...string) (int, []byte, error) {
 	c := exec.CommandContext(ctx, "sh", "-c", strings.Join(cmd, " "))
-	c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
-	e := bytes.NewBuffer(nil)
-	o := bytes.NewBuffer(nil)
-	c.Stderr = e
-	c.Stdout = o
-	if err := c.Run(); err != nil {
-		return -1, o.Bytes(), e.Bytes(), fmt.Errorf("err=%v:stderr=%v:stdout=%v",
-			err, e.String(), e.String())
+	sysProcAttr(c)
+
+	output, err := c.CombinedOutput()
+	if err != nil {
+		return -1, nil, err
 	}
-	return c.Process.Pid, o.Bytes(), e.Bytes(), nil
+	return c.Process.Pid, output, nil
 }
 
 // StartApp
@@ -48,13 +43,13 @@ func StartApp(ctx context.Context, l *logrus.Logger, tag string, load int, cb fu
 			}()
 		}
 		//杀死fixme: pid @ $1
-		_, _, _, err := RunCmd(ctx,
+		_, _, err := RunCmd(ctx,
 			fmt.Sprintf("kill -9 `ps aux|grep %s|grep -v grep|awk '{print $1}'`", tag))
 		if err != nil {
 			l.Debug(fmt.Sprintf("Stop: %s: %s failed", tag, err.Error()))
 		}
 		//前台运行App
-		pid, _, _, err := RunCmd(ctx, cmd...)
+		pid, _, err := RunCmd(ctx, cmd...)
 		if err != nil {
 			l.Error(fmt.Sprintf("StartApp: %s: %s (will restart after %d seconds)", tag, err.Error(), load))
 		}
