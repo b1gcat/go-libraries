@@ -8,7 +8,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	//go tool pprof  https+insecure://localhost:8888/debug/pprof/profile?seconds=60
-	//_ "net/http/pprof"
 )
 
 var fPprof *os.File

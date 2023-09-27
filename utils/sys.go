@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os/exec"
@@ -12,14 +13,22 @@ import (
 
 func RunCmd(ctx context.Context, cmd ...string) (int, []byte, error) {
 	c := exec.CommandContext(ctx, "sh", "-c", strings.Join(cmd, " "))
-
-	sysProcAttr(c)
-
-	output, err := c.CombinedOutput()
-	if err != nil {
-		return -1, nil, err
+	if ctx != nil {
+		sysProcAttr(c)
 	}
-	return c.Process.Pid, output, nil
+	var stdout, stderr bytes.Buffer
+	c.Stdout = &stdout // 标准输出
+	c.Stderr = &stderr // 标准错误
+	output := make([]byte, 0)
+	err := c.Run()
+	if len(stderr.Bytes()) > 0 {
+		output = append(output, stderr.Bytes()...)
+	}
+	if len(stdout.Bytes()) > 0 {
+		output = append(output, stdout.Bytes()...)
+	}
+
+	return c.Process.Pid, output, err
 }
 
 // StartApp
