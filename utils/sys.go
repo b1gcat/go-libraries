@@ -12,14 +12,8 @@ import (
 )
 
 func RunCmd(ctx context.Context, cmd ...string) (int, []byte, error) {
-	var c *exec.Cmd
 
-	if ctx == nil {
-		err := exec.Command("sh", "-c", strings.Join(cmd, " ")).Run()
-		return 0, nil, err
-	}
-
-	c = exec.CommandContext(ctx, "sh", "-c", strings.Join(cmd, " "))
+	c := exec.CommandContext(ctx, "sh", "-c", strings.Join(cmd, " "))
 	sysProcAttr(c)
 
 	var stdout, stderr bytes.Buffer
