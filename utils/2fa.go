@@ -1,5 +1,5 @@
 /*
-	https://github.com/dgryski/dgoogauth
+https://github.com/dgryski/dgoogauth
 */
 package utils
 
