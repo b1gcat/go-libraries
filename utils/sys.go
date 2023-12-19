@@ -3,24 +3,10 @@ package utils
 import (
 	"context"
 	"fmt"
-	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
 )
-
-func RunCmd(ctx context.Context, cmd ...string) (int, []byte, error) {
-	c := exec.CommandContext(ctx, "sh", "-c", strings.Join(cmd, " "))
-
-	sysProcAttr(c)
-
-	output, err := c.CombinedOutput()
-	if err != nil {
-		return -1, nil, err
-	}
-	return c.Process.Pid, output, nil
-}
 
 // StartApp
 // @load/cb 启动启动程序后load秒执行脚本或函数（例如加载配置等）
