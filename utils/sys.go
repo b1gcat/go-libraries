@@ -30,7 +30,7 @@ func StartApp(ctx context.Context, l *logrus.Logger, tag string, load int, cb fu
 		}
 		//杀死fixme: pid @ $1
 		_, _, err := RunCmd(ctx,
-			fmt.Sprintf("kill -9 `ps aux|grep %s|grep -v grep|awk '{print $1}'`", tag))
+			fmt.Sprintf("kill -9 `ps aux|grep %s|grep -v grep|awk '{print $2}'`", tag))
 		if err != nil {
 			l.Debug(fmt.Sprintf("Stop: %s: %s failed", tag, err.Error()))
 		}
